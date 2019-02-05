@@ -7,7 +7,7 @@ library(ggplot2)
 nodes <- 9
 trials <- c(10^3,10^4,10^5)
 arcs_norm <- c(13,5.5,5.2,3.2,3.2)
-arcs_expo <- c(7,16.5,14.7,6,10.3,4,20,16.5)
+arcs_expo <- c(7,16.5,14.7,6,10.3,20,4,16.5)
 
 quantiles <- c(0.05,0.25,0.5,0.75,0.95)
 mean_completion_times <- rep(0,length(trials))
@@ -24,15 +24,15 @@ for (k in 1:length(trials)){
   durations <- array(0,c(trials[k],nodes))
   for (i in 1:trials[k]){
     arcs_norm_sim <- pmax(rnorm(length(arcs_norm),arcs_norm,arcs_norm/4),0)
-    arcs_expo_sim <- rexp(length(arcs_expo),1./arcs_expo)
+    arcs_expo_sim <- rexp(length(arcs_expo),rate=1./arcs_expo)
     arc_lengths[i,] <- c(arcs_norm_sim,arcs_expo_sim)
     durations[i,2] <- arc_lengths[i,1]
     durations[i,3] <- max(arc_lengths[i,2],durations[i,2]+arc_lengths[i,6])
     durations[i,4] <- durations[i,2]+arc_lengths[i,3]
-    durations[i,5] <- durations[i,2]+arc_lengths[i,9]
-    durations[i,6] <- max(durations[i,2]+arc_lengths[i,7],durations[i,3]+arc_lengths[i,8],durations[i,5]+arc_lengths[i,12])
+    durations[i,5] <- durations[i,4]+arc_lengths[i,9]
+    durations[i,6] <- max(durations[i,2]+arc_lengths[i,7],durations[i,3]+arc_lengths[i,8],durations[i,5]+arc_lengths[i,11])
     durations[i,7] <- durations[i,4]+arc_lengths[i,10]
-    durations[i,8] <- max(durations[i,5]+arc_lengths[i,11],durations[i,7]+arc_lengths[i,5])
+    durations[i,8] <- max(durations[i,5]+arc_lengths[i,12],durations[i,7]+arc_lengths[i,5])
     durations[i,9] <- max(durations[i,6]+arc_lengths[i,4],durations[i,8]+arc_lengths[i,13])
   }
   
@@ -40,12 +40,12 @@ for (k in 1:length(trials)){
   mean_completion_times_sd[k] <- sd(durations[,9])
   mean_completion_times_95CI_HL[k] <- qt(0.975,trials[k]-1)*mean_completion_times_sd[k]/sqrt(trials[k])
   percentile_estimates[k,] <- unname(quantile(durations[,9],quantiles))
-  percentile_estimates_95CI_LB[k,] <- unname(quantile(durations[,9],quantiles-qnorm(0.975)*sqrt(quantiles*(1-quantiles)/trials[k])))
-  percentile_estimates_95CI_UB[k,] <- unname(quantile(durations[,9],quantiles+qnorm(0.975)*sqrt(quantiles*(1-quantiles)/trials[k])))
+  percentile_estimates_95CI_LB[k,] <- unname(quantile(durations[,9],quantiles-qnorm(0.975)*sqrt(quantiles*(1-quantiles)/trials[k]),type=1))
+  percentile_estimates_95CI_UB[k,] <- unname(quantile(durations[,9],quantiles+qnorm(0.975)*sqrt(quantiles*(1-quantiles)/trials[k]),type=1))
   
   durations_df <- data.frame(trial = k, durations = durations[,9])
   durations_per_trial[[k]] <- durations_df
-  }
+}
 
 mean_completion_times
 mean_completion_times_95CI_HL
